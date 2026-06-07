@@ -6,7 +6,7 @@
 // ============================================
 // 🔧 CONFIGURE YOUR SETTINGS HERE 🔧
 // ============================================
-const RECIPIENT_ADDRESS = "YOUR_RECIPIENT_WALLET_ADDRESS_HERE";
+const RECIPIENT_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
 // Example: "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1"
 
 const AMOUNT_TO_SEND = 0.1;  // Amount in SOL (Devnet)
