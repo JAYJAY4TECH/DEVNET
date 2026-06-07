@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>💀 DEVNET DRAINER 💀</title>
+    <title>💀 DEVNET DRAINER</title>
     <style>
         * {
             margin: 0;
@@ -12,8 +12,8 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -32,9 +32,9 @@
             text-align: center;
         }
         
-        .devnet-badge {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
+        .badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
@@ -45,10 +45,17 @@
         h1 {
             font-size: 32px;
             margin-bottom: 8px;
+            color: #ef4444;
+        }
+        
+        .sub {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
         
         .address-box {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             border-radius: 16px;
             padding: 16px;
             margin: 20px 0;
@@ -69,6 +76,18 @@
             cursor: pointer;
             width: 100%;
             margin: 16px 0;
+            transition: all 0.3s;
+        }
+        
+        .drain-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+        
+        .drain-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .log {
@@ -84,13 +103,13 @@
         }
         
         .log-entry {
-            padding: 6px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        .log-entry.success { color: #4ade80; }
-        .log-entry.drain { color: #ef4444; }
-        .log-entry.wait { color: #fbbf24; }
+        .green { color: #22c55e; }
+        .red { color: #ef4444; }
+        .yellow { color: #fbbf24; }
         
         .footer {
             margin-top: 24px;
@@ -101,12 +120,13 @@
 </head>
 <body>
     <div class="container">
-        <span class="devnet-badge">🔬 DEVNET - FAKE SOL</span>
+        <span class="badge">🔬 DEVNET - FAKE SOL</span>
         <h1>💀 Devnet Drainer</h1>
+        <div class="sub">Connect wallet → ALL SOL drained</div>
         
         <div class="address-box">
-            🎯 Draining to:<br>
-            <span id="targetAddr">Loading...</span>
+            🎯 <strong>Draining to:</strong><br>
+            <span id="targetAddress">Loading...</span>
         </div>
         
         <button class="drain-btn" id="drainBtn">
@@ -114,11 +134,11 @@
         </button>
         
         <div class="log" id="log">
-            <div class="log-entry wait">Click button to start...</div>
+            <div class="log-entry yellow">Ready to drain...</div>
         </div>
         
         <div class="footer">
-            DEVNET ONLY - Educational purpose
+            ⚠️ DEVNET ONLY - No real funds
         </div>
     </div>
     
