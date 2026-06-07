@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auto SOL Sender - Devnet | Real Blockchain Transactions</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Devnet SOL Sender - Mobile App Connect</title>
     
     <style>
         * {
@@ -19,167 +17,74 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             min-height: 100vh;
             color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
         }
         
         .header {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 16px 24px;
-        }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        
-        .logo {
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .devnet-tag {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 48px 24px;
-        }
-        
-        .hero {
             text-align: center;
-            margin-bottom: 48px;
+            padding: 40px 20px 20px;
         }
         
-        .hero h2 {
-            font-size: 36px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #fff 0%, #fbbf24 100%);
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-        }
-        
-        .hero-subtitle {
-            color: #94a3b8;
-            font-size: 16px;
-        }
-        
-        .info-box {
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 32px;
-            text-align: center;
-        }
-        
-        .info-box h3 {
-            color: #fbbf24;
             margin-bottom: 8px;
         }
         
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
         .wallet-section {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 32px;
-            position: relative;
-        }
-        
-        .connect-trigger-btn {
-            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-            border: none;
-            padding: 18px 48px;
-            border-radius: 60px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a1a;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .connect-trigger-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
-        }
-        
-        .wallet-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 400px;
-            background: #1e1b4b;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            display: none;
+            padding: 24px;
+            margin-bottom: 20px;
         }
         
-        .wallet-dropdown.active {
-            display: block;
-        }
-        
-        .dropdown-header {
+        .wallet-buttons {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-direction: column;
+            gap: 12px;
         }
         
-        .close-dropdown {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        .wallet-list {
-            padding: 8px;
-        }
-        
-        .wallet-option {
+        .wallet-btn {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 14px 16px;
-            border-radius: 16px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 60px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            width: 100%;
         }
         
-        .wallet-option:hover {
+        .wallet-btn:hover {
             background: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.3);
+            transform: translateX(4px);
         }
         
         .wallet-icon {
+            font-size: 32px;
             width: 48px;
             height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
         }
         
         .wallet-info {
@@ -188,7 +93,7 @@
         
         .wallet-name {
             font-weight: 600;
-            margin-bottom: 4px;
+            font-size: 16px;
         }
         
         .wallet-desc {
@@ -196,123 +101,82 @@
             color: #94a3b8;
         }
         
-        .install-badge {
+        .mobile-badge {
             font-size: 10px;
             padding: 4px 8px;
-            background: rgba(255, 152, 0, 0.2);
+            background: rgba(251, 191, 36, 0.2);
             border-radius: 12px;
-            color: #FF9800;
+            color: #fbbf24;
         }
         
-        .connected-section {
-            animation: fadeIn 0.5s ease;
+        .info-card {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .info-card p {
+            font-size: 13px;
+            color: #fbbf24;
+        }
+        
+        .status-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
             display: none;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .status-section.show {
+            display: block;
         }
         
-        .wallet-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .wallet-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        
-        .connected-badge {
-            background: rgba(74, 222, 128, 0.2);
+        .status-title {
             color: #4ade80;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
         }
         
-        .disconnect-btn {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #ef4444;
-            padding: 8px 20px;
-            border-radius: 40px;
-            cursor: pointer;
-        }
-        
-        .wallet-address {
+        .address-box {
             font-family: monospace;
-            font-size: 13px;
+            font-size: 12px;
             background: rgba(0, 0, 0, 0.3);
             padding: 12px;
             border-radius: 12px;
             word-break: break-all;
-            margin: 16px 0;
+            margin: 10px 0;
         }
         
-        .balance-value {
-            font-size: 32px;
+        .balance {
+            font-size: 28px;
             font-weight: 700;
             color: #fbbf24;
+            margin: 10px 0;
         }
         
-        .refresh-balance {
-            background: rgba(251, 191, 36, 0.2);
-            border: none;
-            color: #fbbf24;
-            padding: 8px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            margin-left: 12px;
+        .send-section {
+            margin-top: 20px;
         }
         
-        .auto-send-section {
-            background: rgba(251, 191, 36, 0.05);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(251, 191, 36, 0.2);
-        }
-        
-        .auto-send-section h3 {
-            color: #fbbf24;
-            margin-bottom: 16px;
-        }
-        
-        .preset-address {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            text-align: center;
-        }
-        
-        .preset-address code {
-            font-family: monospace;
-            font-size: 12px;
-            word-break: break-all;
-            color: #fbbf24;
+        .send-section h3 {
+            margin: 20px 0 10px;
+            font-size: 16px;
         }
         
         .quick-amounts {
             display: flex;
-            gap: 12px;
-            margin: 16px 0;
+            gap: 10px;
             flex-wrap: wrap;
+            margin: 15px 0;
         }
         
         .amount-chip {
             background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            border: 1px solid rgba(251, 191, 36, 0.2);
             padding: 8px 16px;
             border-radius: 40px;
             cursor: pointer;
@@ -329,178 +193,126 @@
             color: #1a1a1a;
         }
         
-        .auto-send-btn {
+        .send-btn {
             width: 100%;
             background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
             border: none;
-            padding: 18px;
+            padding: 16px;
             border-radius: 60px;
             font-size: 18px;
             font-weight: 600;
             color: #1a1a1a;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 16px 0;
+            margin-top: 15px;
+            transition: all 0.3s;
         }
         
-        .auto-send-btn:hover {
+        .send-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
         }
         
-        .auto-send-btn:disabled {
+        .send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
         
-        .transaction-log {
+        .log {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 16px;
             padding: 16px;
-            margin-top: 24px;
-            max-height: 400px;
+            margin-top: 20px;
+            max-height: 300px;
             overflow-y: auto;
         }
         
+        .log h4 {
+            margin-bottom: 12px;
+            color: #fbbf24;
+            font-size: 14px;
+        }
+        
         .log-entry {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        .log-entry.success {
-            color: #4ade80;
-        }
-        
-        .log-entry.send {
-            color: #fbbf24;
-        }
-        
-        .log-entry.error {
-            color: #ef4444;
-        }
-        
-        .log-entry.pending {
-            color: #fbbf24;
-        }
+        .log-entry.success { color: #4ade80; }
+        .log-entry.send { color: #fbbf24; }
+        .log-entry.error { color: #ef4444; }
+        .log-entry.pending { color: #fbbf24; }
         
         .footer {
             text-align: center;
-            padding: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            font-size: 12px;
             color: #94a3b8;
-            font-size: 13px;
-            margin-top: 48px;
         }
         
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            display: none;
-        }
-        
-        .overlay.active {
-            display: block;
+        .warning-text {
+            font-size: 11px;
+            color: #fbbf24;
+            margin-top: 10px;
+            text-align: center;
         }
         
         @media (max-width: 768px) {
-            .hero h2 { font-size: 24px; }
-            .wallet-dropdown { width: 90%; max-width: 360px; }
-            .balance-value { font-size: 24px; }
+            .header { padding: 20px 20px 20px; }
+            .header h1 { font-size: 24px; }
+            .wallet-btn { padding: 14px 16px; }
+            .wallet-icon { font-size: 28px; width: 44px; height: 44px; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span>💰</span>
-                <span>Auto SOL Sender</span>
-            </div>
-            <span class="devnet-tag">🔬 DEVNET - Fake SOL</span>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Devnet SOL Sender</h1>
+            <p>Click a wallet to open the mobile app</p>
         </div>
-    </div>
-
-    <main class="main">
-        <div class="hero">
-            <h2>⚡ Auto-Send Devnet SOL</h2>
-            <p class="hero-subtitle">One click. Real blockchain transaction. Instant delivery.<br>
-            <span style="color: #fbbf24;">✅ The recipient will see the SOL in their wallet!</span></p>
-        </div>
-
-         
-
+        
+        <!-- Wallet Selection Section -->
         <div class="wallet-section" id="walletSection">
-            <button class="connect-trigger-btn" id="connectWalletTrigger">
-                <span>🔐</span>
-                Connect Wallet
-            </button>
-
-            <div class="wallet-dropdown" id="walletDropdown">
-                <div class="dropdown-header">
-                    <h3>Select Wallet</h3>
-                    <button class="close-dropdown" id="closeDropdown">✕</button>
-                </div>
-                <div class="wallet-list">
-                    <div class="wallet-option" data-wallet="phantom">
-                        <div class="wallet-icon">🦊</div>
-                        <div class="wallet-info">
-                            <div class="wallet-name">Phantom</div>
-                            <div class="wallet-desc">The leading Solana wallet</div>
-                        </div>
-                        <span class="install-badge" id="phantomBadge"></span>
+            <div class="wallet-buttons">
+                <!-- Phantom Wallet -->
+                <button class="wallet-btn" id="phantomBtn">
+                    <div class="wallet-icon">🦊</div>
+                    <div class="wallet-info">
+                        <div class="wallet-name">Phantom Wallet</div>
+                        <div class="wallet-desc">The leading Solana wallet</div>
                     </div>
-                    
-                    <div class="wallet-option" data-wallet="solflare">
-                        <div class="wallet-icon">🔥</div>
-                        <div class="wallet-info">
-                            <div class="wallet-name">Solflare</div>
-                            <div class="wallet-desc">Secure Solana wallet</div>
-                        </div>
-                        <span class="install-badge" id="solflareBadge"></span>
+                    <span class="mobile-badge">📱 Opens App</span>
+                </button>
+                
+                <!-- Solflare Wallet -->
+                <button class="wallet-btn" id="solflareBtn">
+                    <div class="wallet-icon">🔥</div>
+                    <div class="wallet-info">
+                        <div class="wallet-name">Solflare Wallet</div>
+                        <div class="wallet-desc">Secure Solana wallet</div>
                     </div>
-                    
-                    <div class="wallet-option" data-wallet="backpack">
-                        <div class="wallet-icon">🎒</div>
-                        <div class="wallet-info">
-                            <div class="wallet-name">Backpack</div>
-                            <div class="wallet-desc">All-in-one crypto wallet</div>
-                        </div>
-                        <span class="install-badge" id="backpackBadge"></span>
-                    </div>
-                </div>
+                    <span class="mobile-badge">📱 Opens App</span>
+                </button>
+            </div>
+            
+            <div class="info-card">
+                <p>📱 Click any wallet button → Opens the mobile app → Approve connection</p>
+                <p style="font-size: 11px; margin-top: 8px;">After connecting, return to this page to send SOL</p>
             </div>
         </div>
-
-        <div class="connected-section" id="connectedSection">
-            <div class="wallet-card">
-                <div class="wallet-card-header">
-                    <span class="connected-badge">✅ Connected to DEVNET</span>
-                    <button class="disconnect-btn" id="disconnectBtn">Disconnect</button>
-                </div>
-                <div class="wallet-address" id="connectedAddress">-</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <span>💰 Your Balance:</span>
-                    <span class="balance-value" id="walletBalance">0</span>
-                    <span>DEVNET SOL</span>
-                    <button class="refresh-balance" id="refreshBalance">⟳ Refresh</button>
-                </div>
-            </div>
-
-            <div class="auto-send-section">
-                <h3>🚀 Auto Send to Pre-Configured Address</h3>
-                
-                <div class="preset-address">
-                    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">🎯 Sending to:</div>
-                    <code id="targetAddressDisplay">Loading...</code>
-                </div>
+        
+        <!-- Connected Status Section -->
+        <div class="status-section" id="statusSection">
+            <div class="status-title">✅ Connected to Devnet</div>
+            <div class="address-box" id="walletAddress">-</div>
+            <div>💰 Your Balance: <span class="balance" id="balance">0</span> DEVNET SOL</div>
+            
+            <div class="send-section">
+                <h3>📤 Send to Pre-Configured Address</h3>
+                <div class="address-box" id="targetDisplay" style="background: rgba(251,191,36,0.1);">Loading target...</div>
                 
                 <div class="quick-amounts">
                     <div class="amount-chip" data-amount="0.01">0.01 SOL</div>
@@ -511,29 +323,22 @@
                     <div class="amount-chip" data-amount="5">5 SOL</div>
                 </div>
                 
-                <button class="auto-send-btn" id="autoSendBtn">
-                    ⚡ AUTO SEND DEVNET SOL ⚡
-                </button>
-                
-                <div style="font-size: 11px; text-align: center; color: #fbbf24;">
-                    ⚠️ You will need to APPROVE the transaction in your wallet
-                </div>
+                <button class="send-btn" id="sendBtn">⚡ SEND DEVNET SOL</button>
+                <div class="warning-text">⚠️ You will need to APPROVE the transaction in your wallet</div>
             </div>
-
-            <div class="transaction-log">
-                <h4 style="margin-bottom: 12px; color: #fbbf24;">📜 Transaction History</h4>
-                <div id="transactionLog">Ready to send...</div>
+            
+            <div class="log">
+                <h4>📜 Transaction Log</h4>
+                <div id="logEntries">Ready to send...</div>
             </div>
         </div>
-    </main>
-
-    <footer class="footer">
-        <p>✅ REAL DEVNET BLOCKCHAIN TRANSACTIONS - Worth $0 - For learning</p>
-        <p class="footer-note" style="font-size: 11px; margin-top: 8px;">The recipient will see the SOL in their wallet instantly!</p>
-    </footer>
-
-    <div class="overlay" id="overlay"></div>
-
+        
+        <div class="footer">
+            <p>🔬 DEVNET - Fake SOL worth $0</p>
+            <p>📱 Click wallet button → Opens app → Approve → Return here</p>
+        </div>
+    </div>
+    
     <script src="app.js"></script>
 </body>
 </html>
