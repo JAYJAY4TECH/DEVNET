@@ -1,14 +1,12 @@
 /**
  * Auto SOL Sender - Devnet
- * Sends REAL Devnet SOL to a pre-configured address
- * Recipient sees the SOL in their wallet instantly!
+ * Fixed Phantom wallet detection
  */
 
 // ============================================
 // 🔧 CONFIGURE YOUR TARGET ADDRESS HERE 🔧
 // ============================================
-// 👇 Replace with the wallet address you want to send to
-const TARGET_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
+const TARGET_ADDRESS = "YOUR_RECIPIENT_WALLET_ADDRESS_HERE";
 // Example: "9x4e9wXHvE9P9yXxR4R9qXxXxXxXxXxXxXxXxXxX"
 // ============================================
 
@@ -22,12 +20,16 @@ let transactionLog = [];
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Auto SOL Sender Started!');
-    console.log(`🎯 Target: ${TARGET_ADDRESS}`);
-    initSolana();
-    setupEventListeners();
-    checkWalletInstallations();
-    setupAmountChips();
-    updateTargetDisplay();
+    console.log('🎯 Target:', TARGET_ADDRESS);
+    
+    // Wait a bit for Phantom to load
+    setTimeout(() => {
+        initSolana();
+        setupEventListeners();
+        checkWalletInstallations();
+        setupAmountChips();
+        updateTargetDisplay();
+    }, 500);
 });
 
 async function initSolana() {
@@ -106,6 +108,7 @@ function setupEventListeners() {
     walletOptions.forEach(option => {
         option.addEventListener('click', () => {
             const walletType = option.getAttribute('data-wallet');
+            console.log('Selected wallet:', walletType);
             closeDropdownMenu();
             connectWallet(walletType);
         });
@@ -126,68 +129,132 @@ function closeDropdownMenu() {
     if (overlay) overlay.classList.remove('active');
 }
 
+// FIXED: Better Phantom detection
 function checkWalletInstallations() {
-    const wallets = {
-        phantom: !!window.phantom?.solana,
-        solflare: !!window.solflare,
-        backpack: !!window.backpack?.solana
-    };
+    // Check if Phantom is available
+    const isPhantomInstalled = window.phantom?.solana || window.solana?.isPhantom;
+    const isSolflareInstalled = window.solflare || window.solana?.isSolflare;
+    const isBackpackInstalled = window.backpack?.solana;
     
-    for (const [wallet, installed] of Object.entries(wallets)) {
-        const badge = document.getElementById(`${wallet}Badge`);
-        if (badge) {
-            if (installed) {
-                badge.textContent = '✓ Installed';
-                badge.style.background = 'rgba(74, 222, 128, 0.2)';
-                badge.style.color = '#4ade80';
-            } else {
-                badge.textContent = 'Install';
-                badge.style.background = 'rgba(255, 152, 0, 0.2)';
-                badge.style.color = '#FF9800';
-            }
+    console.log('Phantom installed?', isPhantomInstalled);
+    console.log('Solflare installed?', isSolflareInstalled);
+    console.log('Backpack installed?', isBackpackInstalled);
+    
+    // Update Phantom badge
+    const phantomBadge = document.getElementById('phantomBadge');
+    if (phantomBadge) {
+        if (isPhantomInstalled) {
+            phantomBadge.textContent = '✓ Installed';
+            phantomBadge.style.background = 'rgba(74, 222, 128, 0.2)';
+            phantomBadge.style.color = '#4ade80';
+        } else {
+            phantomBadge.textContent = 'Install';
+            phantomBadge.style.background = 'rgba(255, 152, 0, 0.2)';
+            phantomBadge.style.color = '#FF9800';
         }
     }
+    
+    // Update Solflare badge
+    const solflareBadge = document.getElementById('solflareBadge');
+    if (solflareBadge) {
+        if (isSolflareInstalled) {
+            solflareBadge.textContent = '✓ Installed';
+            solflareBadge.style.background = 'rgba(74, 222, 128, 0.2)';
+            solflareBadge.style.color = '#4ade80';
+        } else {
+            solflareBadge.textContent = 'Install';
+            solflareBadge.style.background = 'rgba(255, 152, 0, 0.2)';
+            solflareBadge.style.color = '#FF9800';
+        }
+    }
+    
+    // Update Backpack badge
+    const backpackBadge = document.getElementById('backpackBadge');
+    if (backpackBadge) {
+        if (isBackpackInstalled) {
+            backpackBadge.textContent = '✓ Installed';
+            backpackBadge.style.background = 'rgba(74, 222, 128, 0.2)';
+            backpackBadge.style.color = '#4ade80';
+        } else {
+            backpackBadge.textContent = 'Install';
+            backpackBadge.style.background = 'rgba(255, 152, 0, 0.2)';
+            backpackBadge.style.color = '#FF9800';
+        }
+    }
+    
+    return {
+        phantom: isPhantomInstalled,
+        solflare: isSolflareInstalled,
+        backpack: isBackpackInstalled
+    };
 }
 
+// FIXED: Better Phantom connection
 async function connectWallet(walletType) {
+    console.log(`🔌 Connecting to ${walletType}...`);
+    
     try {
         let publicKey = null;
         
         switch(walletType) {
             case 'phantom':
-                if (!window.phantom?.solana) {
-                    if (confirm('Install Phantom wallet?')) window.open('https://phantom.app/');
+                // Try multiple ways to get Phantom
+                const phantomProvider = window.phantom?.solana || window.solana;
+                
+                if (!phantomProvider || !phantomProvider.isPhantom) {
+                    addToLog(`⚠️ Phantom not detected. Please install Phantom wallet first.`, 'error');
+                    if (confirm('Phantom wallet not detected. Would you like to install it?')) {
+                        window.open('https://phantom.app/', '_blank');
+                    }
                     return;
                 }
-                const resp = await window.phantom.solana.connect();
-                publicKey = resp.publicKey.toString();
+                
+                addToLog(`🔄 Requesting connection to Phantom...`, 'pending');
+                const phantomResp = await phantomProvider.connect();
+                publicKey = phantomResp.publicKey.toString();
                 break;
+                
             case 'solflare':
-                if (!window.solflare) {
-                    if (confirm('Install Solflare wallet?')) window.open('https://solflare.com/');
+                if (!window.solflare && !window.solana?.isSolflare) {
+                    if (confirm('Solflare wallet not detected. Install?')) {
+                        window.open('https://solflare.com/', '_blank');
+                    }
                     return;
                 }
-                await window.solflare.connect();
-                publicKey = window.solflare.publicKey.toString();
+                const solflareProvider = window.solflare || window.solana;
+                await solflareProvider.connect();
+                publicKey = solflareProvider.publicKey.toString();
                 break;
+                
             case 'backpack':
                 if (!window.backpack?.solana) {
-                    if (confirm('Install Backpack wallet?')) window.open('https://backpack.app/');
+                    if (confirm('Backpack wallet not detected. Install?')) {
+                        window.open('https://backpack.app/', '_blank');
+                    }
                     return;
                 }
-                const bpResp = await window.backpack.solana.connect();
-                publicKey = bpResp.publicKey.toString();
+                const backpackResp = await window.backpack.solana.connect();
+                publicKey = backpackResp.publicKey.toString();
                 break;
+                
+            default:
+                throw new Error('Unknown wallet type');
         }
         
         currentPublicKey = publicKey;
-        await updateBalance();
-        showConnectedUI();
         addToLog(`✅ Connected: ${currentPublicKey.substring(0, 20)}...`, 'success');
         
+        await updateBalance();
+        showConnectedUI();
+        
     } catch (error) {
-        console.error(error);
+        console.error('Connection error:', error);
         addToLog(`❌ Connection failed: ${error.message}`, 'error');
+        
+        // If user rejected, don't show scary error
+        if (error.message === 'User rejected') {
+            addToLog(`ℹ️ Connection was cancelled`, 'info');
+        }
     }
 }
 
@@ -212,8 +279,8 @@ async function autoSendSol() {
     }
     
     if (!TARGET_ADDRESS || TARGET_ADDRESS === "YOUR_RECIPIENT_WALLET_ADDRESS_HERE") {
-        alert('⚠️ Please edit app.js and set TARGET_ADDRESS to your recipient wallet!\n\nExample: "9x4e9wXHvE9P9yXxR4R9qXxXxXxXxXxXxXxXxXxX"');
-        addToLog(`❌ No target address configured! Edit TARGET_ADDRESS in app.js`, 'error');
+        alert('⚠️ Please edit app.js and set TARGET_ADDRESS to your recipient wallet!');
+        addToLog(`❌ No target address configured!`, 'error');
         return;
     }
     
@@ -228,12 +295,13 @@ async function autoSendSol() {
     try {
         const sendBtn = document.getElementById('autoSendBtn');
         sendBtn.disabled = true;
-        sendBtn.textContent = '⏳ Sending... Approve in wallet';
+        sendBtn.textContent = '⏳ Approve in wallet...';
         
-        addToLog(`🚀 Auto-send started!`, 'pending');
+        addToLog(`🚀 Starting transfer...`, 'pending');
         addToLog(`📤 Sending ${amount} DEVNET SOL`, 'send');
         addToLog(`📍 To: ${TARGET_ADDRESS.substring(0, 30)}...`, 'info');
         
+        // Get provider
         let provider = null;
         if (window.phantom?.solana) provider = window.phantom.solana;
         else if (window.solflare) provider = window.solflare;
@@ -256,27 +324,27 @@ async function autoSendSol() {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = fromPubkey;
         
-        addToLog(`⏳ Waiting for your approval in wallet...`, 'pending');
+        addToLog(`⏳ Waiting for your approval in Phantom wallet...`, 'pending');
         
         const signature = await provider.signAndSendTransaction(transaction);
         
-        addToLog(`✅ Transaction sent! Signature: ${signature.substring(0, 40)}...`, 'success');
+        addToLog(`✅ Transaction sent!`, 'success');
+        addToLog(`🔑 Signature: ${signature.substring(0, 40)}...`, 'info');
         
         addToLog(`⏳ Confirming on blockchain...`, 'pending');
         
         const confirmation = await connection.confirmTransaction(signature, 'confirmed');
         
         if (confirmation.value.err) {
-            throw new Error(`Transaction failed: ${confirmation.value.err}`);
+            throw new Error(`Transaction failed`);
         }
         
         addToLog(`🎉 CONFIRMED! ${amount} DEVNET SOL sent!`, 'success');
-        addToLog(`🔗 View: https://solscan.io/tx/${signature}?cluster=devnet`, 'info');
-        addToLog(`📱 The recipient can now see the SOL in their wallet!`, 'success');
+        addToLog(`🔗 https://solscan.io/tx/${signature}?cluster=devnet`, 'info');
         
         await updateBalance();
         
-        alert(`✅ SENT SUCCESSFULLY!\n\nAmount: ${amount} DEVNET SOL\nTo: ${TARGET_ADDRESS.substring(0, 30)}...\n\nThe recipient will see the SOL in their wallet!\n\nView on Solscan:\nhttps://solscan.io/tx/${signature}?cluster=devnet`);
+        alert(`✅ SENT SUCCESSFULLY!\n\nAmount: ${amount} DEVNET SOL\nTo: ${TARGET_ADDRESS.substring(0, 30)}...\n\nThe recipient will see the SOL in their wallet!`);
         
     } catch (error) {
         console.error('Send error:', error);
