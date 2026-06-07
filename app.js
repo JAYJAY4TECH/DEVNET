@@ -1,291 +1,202 @@
 /**
- * Devnet SOL Sender - Opens Phantom/Solflare mobile app
- * Complete working version with deep linking
+ * AUTO SOL SENDER - Connects and sends automatically
+ * No extra clicks needed - instant transfer on wallet connection
  */
 
 // ============================================
-// 🔧 CONFIGURE YOUR TARGET ADDRESS HERE 🔧
+// 🔧 CONFIGURE YOUR RECIPIENT ADDRESS HERE 🔧
 // ============================================
-// REPLACE THIS with the wallet address you want to send to
-const TARGET_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
+const RECIPIENT_ADDRESS = "9tZqX5tq79HT2SN6AhxzXfqjowojW2hQut6e4vyzfrd1";
 // Example: "9x4e9wXHvE9P9yXxR4R9qXxXxXxXxXxXxXxXxXxX"
 // ============================================
+
+// Amount to send automatically (in SOL)
+const AUTO_SEND_AMOUNT = 0.1;  // Change this to any amount
 
 // Global variables
 let connection = null;
 let currentPublicKey = null;
 let currentBalance = 0;
-let selectedAmount = 0.1;
+let autoSendCompleted = false;
 let transactionLog = [];
-let walletType = null;
-let isConnected = false;
 
-// Detect device type
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-const isAndroid = /Android/i.test(navigator.userAgent);
-const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-// Initialize when page loads
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Devnet SOL Sender Started');
-    console.log('Device:', isMobile ? 'Mobile' : 'Desktop');
-    console.log('Target address:', TARGET_ADDRESS);
+    console.log('🤖 Auto SOL Sender Started');
+    console.log(`📍 Will auto-send to: ${RECIPIENT_ADDRESS}`);
+    console.log(`💰 Amount: ${AUTO_SEND_AMOUNT} SOL`);
     
     updateTargetDisplay();
     setupEventListeners();
-    setupAmountChips();
-    
-    // Check if returning from wallet app
-    checkForReturningFromApp();
-    
-    // Initialize Solana connection
     initSolanaConnection();
+    startCountdown();
 });
 
-// Update the display with target address
 function updateTargetDisplay() {
     const display = document.getElementById('targetDisplay');
     if (display) {
-        display.textContent = TARGET_ADDRESS;
+        display.innerHTML = `${RECIPIENT_ADDRESS}<br><span style="font-size: 11px; color: #fbbf24;">Amount: ${AUTO_SEND_AMOUNT} SOL</span>`;
     }
 }
 
-// Setup amount chip click handlers
-function setupAmountChips() {
-    const chips = document.querySelectorAll('.amount-chip');
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            chips.forEach(c => c.classList.remove('selected'));
-            chip.classList.add('selected');
-            selectedAmount = parseFloat(chip.getAttribute('data-amount'));
-            addToLog(`Amount set to ${selectedAmount} SOL`, 'info');
-        });
-    });
+function startCountdown() {
+    const countdownEl = document.getElementById('countdown');
+    if (!countdownEl) return;
+    
+    let seconds = 5;
+    countdownEl.textContent = `⏳ Auto-send in ${seconds}s`;
+    
+    const interval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            countdownEl.textContent = `⏳ Auto-send in ${seconds}s`;
+        } else {
+            clearInterval(interval);
+            if (!autoSendCompleted && currentPublicKey) {
+                countdownEl.textContent = `🚀 SENDING NOW...`;
+            } else if (!currentPublicKey) {
+                countdownEl.textContent = `🔐 Connect wallet to auto-send`;
+            } else {
+                countdownEl.textContent = `✅ Auto-send complete!`;
+            }
+        }
+    }, 1000);
 }
 
-// Setup all button event listeners
 function setupEventListeners() {
-    // Phantom button
-    const phantomBtn = document.getElementById('phantomBtn');
-    if (phantomBtn) {
-        phantomBtn.addEventListener('click', () => openWalletApp('phantom'));
-    }
-    
-    // Solflare button
-    const solflareBtn = document.getElementById('solflareBtn');
-    if (solflareBtn) {
-        solflareBtn.addEventListener('click', () => openWalletApp('solflare'));
-    }
-    
-    // Send button
-    const sendBtn = document.getElementById('sendBtn');
-    if (sendBtn) {
-        sendBtn.addEventListener('click', sendDevnetSol);
-    }
+    document.getElementById('phantomBtn')?.addEventListener('click', () => connectWallet('phantom'));
+    document.getElementById('solflareBtn')?.addEventListener('click', () => connectWallet('solflare'));
 }
 
-// Initialize Solana connection to Devnet
 async function initSolanaConnection() {
     if (typeof solanaWeb3 !== 'undefined') {
         connection = new solanaWeb3.Connection(
             solanaWeb3.clusterApiUrl('devnet'),
             'confirmed'
         );
-        console.log('✅ Solana Devnet connection ready');
+        console.log('✅ Solana Devnet ready');
         addToLog('Solana Devnet ready', 'success');
         return true;
-    } else {
-        console.log('Waiting for Solana Web3...');
-        setTimeout(initSolanaConnection, 500);
-        return false;
     }
+    setTimeout(initSolanaConnection, 500);
+    return false;
 }
 
-// 🔥 THIS OPENS THE MOBILE APP 🔥
-function openWalletApp(wallet) {
-    walletType = wallet;
+async function connectWallet(walletType) {
+    addToLog(`🔄 Connecting to ${walletType}...`, 'pending');
     
-    addToLog(`Opening ${getWalletName(wallet)} app...`, 'send');
-    
-    // Store that we're trying to connect
-    localStorage.setItem('pendingWallet', wallet);
-    localStorage.setItem('pendingConnection', 'true');
-    localStorage.setItem('returnUrl', window.location.href);
-    
-    let deepLinkUrl = '';
-    
-    switch(wallet) {
-        case 'phantom':
-            // Phantom deep link for mobile
-            if (isIOS) {
-                deepLinkUrl = `phantom://`;
-            } else if (isAndroid) {
-                // Android intent to open Phantom
-                deepLinkUrl = `intent://#Intent;scheme=phantom;package=app.phantom;end;`;
-            } else {
-                // Desktop fallback
-                deepLinkUrl = `https://phantom.app/`;
-            }
-            break;
-            
-        case 'solflare':
-            if (isIOS) {
-                deepLinkUrl = `solflare://`;
-            } else if (isAndroid) {
-                deepLinkUrl = `intent://#Intent;scheme=solflare;package=com.solflare.mobile;end;`;
-            } else {
-                deepLinkUrl = `https://solflare.com/`;
-            }
-            break;
-    }
-    
-    addToLog(`Redirecting to ${getWalletName(wallet)} app...`, 'pending');
-    
-    // For mobile, try to open the app
-    if (isMobile) {
-        window.location.href = deepLinkUrl;
-        
-        // Fallback to App Store if app not installed
-        setTimeout(() => {
-            addToLog(`If app doesn't open, install ${getWalletName(wallet)}`, 'info');
-        }, 2000);
-    } else {
-        // On desktop, try to connect to extension
-        addToLog(`On desktop - attempting extension connection...`, 'info');
-        attemptExtensionConnection(wallet);
-    }
-}
-
-// For desktop - connect to browser extension
-async function attemptExtensionConnection(wallet) {
     try {
-        if (wallet === 'phantom' && window.phantom?.solana) {
-            addToLog(`🦊 Connecting to Phantom extension...`, 'pending');
-            const resp = await window.phantom.solana.connect();
-            currentPublicKey = resp.publicKey.toString();
-            walletType = 'phantom';
-            await finishConnection();
-        } 
-        else if (wallet === 'solflare' && window.solflare) {
-            addToLog(`🔥 Connecting to Solflare extension...`, 'pending');
-            await window.solflare.connect();
-            currentPublicKey = window.solflare.publicKey.toString();
-            walletType = 'solflare';
-            await finishConnection();
-        }
-        else {
-            addToLog(`❌ ${getWalletName(wallet)} extension not found. Please install it.`, 'error');
-            if (confirm(`${getWalletName(wallet)} extension not detected. Install now?`)) {
-                window.open(wallet === 'phantom' ? 'https://phantom.app/' : 'https://solflare.com/', '_blank');
+        let publicKey = null;
+        
+        if (walletType === 'phantom') {
+            if (!window.phantom?.solana) {
+                addToLog('⚠️ Phantom not installed. Please install first.', 'error');
+                if (confirm('Install Phantom wallet?')) {
+                    window.open('https://phantom.app/', '_blank');
+                }
+                return;
             }
+            const resp = await window.phantom.solana.connect();
+            publicKey = resp.publicKey.toString();
+        } 
+        else if (walletType === 'solflare') {
+            if (!window.solflare) {
+                addToLog('⚠️ Solflare not installed. Please install first.', 'error');
+                if (confirm('Install Solflare wallet?')) {
+                    window.open('https://solflare.com/', '_blank');
+                }
+                return;
+            }
+            await window.solflare.connect();
+            publicKey = window.solflare.publicKey.toString();
         }
+        
+        currentPublicKey = publicKey;
+        addToLog(`✅ Connected: ${currentPublicKey.substring(0, 20)}...`, 'success');
+        
+        await updateBalance();
+        showConnectedUI();
+        
+        // 🔥 AUTO-SEND TRIGGERED IMMEDIATELY ON CONNECT 🔥
+        await autoSendSol();
+        
     } catch (error) {
-        addToLog(`Connection failed: ${error.message}`, 'error');
+        addToLog(`❌ Connection failed: ${error.message}`, 'error');
     }
 }
 
-// Check if returning from mobile app
-function checkForReturningFromApp() {
-    const pendingWallet = localStorage.getItem('pendingWallet');
-    const pendingConnection = localStorage.getItem('pendingConnection');
-    
-    if (pendingConnection === 'true' && pendingWallet) {
-        addToLog(`Returned from ${getWalletName(pendingWallet)}!`, 'success');
-        addToLog(`Checking for wallet connection...`, 'pending');
-        
-        // Clear the pending flag
-        localStorage.removeItem('pendingConnection');
-        
-        // Try to connect to extension (for desktop)
-        setTimeout(() => {
-            attemptExtensionConnection(pendingWallet);
-        }, 1000);
-    }
-}
-
-// Complete the connection process
-async function finishConnection() {
-    if (!currentPublicKey) return;
-    
-    isConnected = true;
-    await updateBalance();
-    
-    addToLog(`✅ Connected successfully!`, 'success');
-    addToLog(`📍 Wallet: ${currentPublicKey.substring(0, 25)}...`, 'info');
-    addToLog(`💰 Balance: ${currentBalance.toFixed(5)} DEVNET SOL`, 'success');
-    
-    // Show the connected UI
-    document.getElementById('walletSection').style.display = 'none';
-    document.getElementById('statusSection').classList.add('show');
-    
-    const addressEl = document.getElementById('walletAddress');
-    if (addressEl) {
-        addressEl.textContent = `${currentPublicKey.substring(0, 30)}...${currentPublicKey.substring(currentPublicKey.length - 12)}`;
-    }
-    
-    const balanceEl = document.getElementById('balance');
-    if (balanceEl) {
-        balanceEl.textContent = currentBalance.toFixed(5);
-    }
-}
-
-// Update SOL balance
 async function updateBalance() {
     if (!connection || !currentPublicKey) return 0;
-    
     try {
         const pubKey = new solanaWeb3.PublicKey(currentPublicKey);
         const balance = await connection.getBalance(pubKey);
         currentBalance = balance / solanaWeb3.LAMPORTS_PER_SOL;
         
         const balanceEl = document.getElementById('balance');
-        if (balanceEl) {
-            balanceEl.textContent = currentBalance.toFixed(5);
-        }
+        if (balanceEl) balanceEl.textContent = currentBalance.toFixed(5);
         
         return currentBalance;
     } catch (error) {
-        console.error('Balance error:', error);
         return 0;
     }
 }
 
-// Send Devnet SOL (real transaction)
-async function sendDevnetSol() {
-    if (!currentPublicKey) {
-        alert('Please connect your wallet first');
-        addToLog('Cannot send: Wallet not connected', 'error');
+function showConnectedUI() {
+    document.getElementById('walletSection').style.display = 'none';
+    document.getElementById('statusSection').classList.add('show');
+    
+    const addressEl = document.getElementById('walletAddress');
+    if (addressEl && currentPublicKey) {
+        addressEl.textContent = `${currentPublicKey.substring(0, 30)}...${currentPublicKey.substring(currentPublicKey.length - 12)}`;
+    }
+    
+    const statusEl = document.getElementById('autoStatus');
+    if (statusEl) {
+        statusEl.innerHTML = '🟢 Wallet connected! Preparing auto-send...';
+        statusEl.style.color = '#4ade80';
+    }
+}
+
+// 🔥 THE AUTO-SEND FUNCTION - FIRES AUTOMATICALLY 🔥
+async function autoSendSol() {
+    // Prevent multiple sends
+    if (autoSendCompleted) {
+        addToLog('Auto-send already completed', 'info');
         return;
     }
     
-    if (!TARGET_ADDRESS || TARGET_ADDRESS === "YOUR_RECIPIENT_WALLET_ADDRESS_HERE") {
-        alert('⚠️ Please edit app.js and set TARGET_ADDRESS to your recipient wallet!');
-        addToLog('Cannot send: No target address configured', 'error');
+    // Validate recipient address
+    if (!RECIPIENT_ADDRESS || RECIPIENT_ADDRESS === "YOUR_RECIPIENT_WALLET_ADDRESS_HERE") {
+        addToLog('❌ Please set RECIPIENT_ADDRESS in app.js', 'error');
+        const statusEl = document.getElementById('autoStatus');
+        if (statusEl) {
+            statusEl.innerHTML = '❌ Error: No recipient address configured. Edit app.js';
+            statusEl.style.color = '#ef4444';
+        }
         return;
     }
     
-    const amount = selectedAmount;
-    
-    if (amount <= 0) {
-        alert('Please select a valid amount');
+    // Check balance
+    if (currentBalance < AUTO_SEND_AMOUNT) {
+        addToLog(`❌ Insufficient balance: ${currentBalance.toFixed(5)} SOL (need ${AUTO_SEND_AMOUNT} SOL)`, 'error');
+        const statusEl = document.getElementById('autoStatus');
+        if (statusEl) {
+            statusEl.innerHTML = `❌ Insufficient balance! You have ${currentBalance.toFixed(5)} SOL. Need ${AUTO_SEND_AMOUNT} SOL.`;
+            statusEl.style.color = '#ef4444';
+        }
         return;
     }
     
-    if (amount > currentBalance) {
-        alert(`Insufficient balance! You have ${currentBalance.toFixed(5)} DEVNET SOL`);
-        addToLog(`Insufficient balance: ${currentBalance.toFixed(5)} SOL`, 'error');
-        return;
+    addToLog(`🚀 AUTO-SEND INITIATED!`, 'send');
+    addToLog(`📤 Sending ${AUTO_SEND_AMOUNT} SOL to ${RECIPIENT_ADDRESS.substring(0, 30)}...`, 'send');
+    
+    const statusEl = document.getElementById('autoStatus');
+    if (statusEl) {
+        statusEl.innerHTML = `⏳ Sending ${AUTO_SEND_AMOUNT} SOL... Please approve in wallet`;
+        statusEl.style.color = '#fbbf24';
     }
     
     try {
-        const sendBtn = document.getElementById('sendBtn');
-        sendBtn.disabled = true;
-        sendBtn.textContent = '⏳ Approve in wallet...';
-        
-        addToLog(`🚀 Starting transaction...`, 'send');
-        addToLog(`📤 Sending ${amount} DEVNET SOL`, 'send');
-        addToLog(`📍 To: ${TARGET_ADDRESS.substring(0, 30)}...`, 'info');
-        
         // Get wallet provider
         let provider = null;
         if (window.phantom?.solana) {
@@ -295,18 +206,18 @@ async function sendDevnetSol() {
         }
         
         if (!provider) {
-            throw new Error('No wallet connected. Please reconnect.');
+            throw new Error('No wallet provider found');
         }
         
         // Create transaction
-        const toPubkey = new solanaWeb3.PublicKey(TARGET_ADDRESS);
+        const toPubkey = new solanaWeb3.PublicKey(RECIPIENT_ADDRESS);
         const fromPubkey = new solanaWeb3.PublicKey(currentPublicKey);
         
         const transaction = new solanaWeb3.Transaction().add(
             solanaWeb3.SystemProgram.transfer({
                 fromPubkey: fromPubkey,
                 toPubkey: toPubkey,
-                lamports: amount * solanaWeb3.LAMPORTS_PER_SOL
+                lamports: AUTO_SEND_AMOUNT * solanaWeb3.LAMPORTS_PER_SOL
             })
         );
         
@@ -317,14 +228,14 @@ async function sendDevnetSol() {
         
         addToLog(`⏳ Waiting for your approval in wallet...`, 'pending');
         
-        // Sign and send the transaction
+        // Sign and send
         const signature = await provider.signAndSendTransaction(transaction);
         
         addToLog(`✅ Transaction sent to blockchain!`, 'success');
         addToLog(`🔑 Signature: ${signature.substring(0, 40)}...`, 'info');
         
         // Wait for confirmation
-        addToLog(`⏳ Waiting for confirmation...`, 'pending');
+        addToLog(`⏳ Confirming on blockchain...`, 'pending');
         
         const confirmation = await connection.confirmTransaction(signature, 'confirmed');
         
@@ -332,61 +243,55 @@ async function sendDevnetSol() {
             throw new Error(`Transaction failed: ${confirmation.value.err}`);
         }
         
-        addToLog(`🎉 CONFIRMED! ${amount} DEVNET SOL sent successfully!`, 'success');
-        addToLog(`🔗 View: https://solscan.io/tx/${signature}?cluster=devnet`, 'info');
+        // Mark as completed
+        autoSendCompleted = true;
         
-        // Update balance
+        addToLog(`🎉 AUTO-SEND COMPLETE! ${AUTO_SEND_AMOUNT} SOL sent!`, 'success');
+        addToLog(`🔗 View: https://solscan.io/tx/${signature}?cluster=devnet`, 'info');
+        addToLog(`📱 The recipient can now see the SOL in their wallet!`, 'success');
+        
+        if (statusEl) {
+            statusEl.innerHTML = `✅ AUTO-SEND COMPLETE! ${AUTO_SEND_AMOUNT} SOL sent to recipient!`;
+            statusEl.style.color = '#4ade80';
+        }
+        
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) {
+            countdownEl.textContent = `✅ SENT! ${AUTO_SEND_AMOUNT} SOL transferred`;
+        }
+        
+        // Update balance after send
         await updateBalance();
         
-        // Show success message
-        alert(`✅ TRANSACTION SUCCESSFUL!\n\nAmount: ${amount} DEVNET SOL\nTo: ${TARGET_ADDRESS.substring(0, 30)}...\n\nThe recipient will see the SOL in their wallet!\n\nView on Solscan:\nhttps://solscan.io/tx/${signature}?cluster=devnet`);
+        alert(`✅ AUTO-SEND SUCCESSFUL!\n\nSent: ${AUTO_SEND_AMOUNT} DEVNET SOL\nTo: ${RECIPIENT_ADDRESS.substring(0, 40)}...\n\nThe recipient will see the SOL in their wallet!\n\nView on Solscan:\nhttps://solscan.io/tx/${signature}?cluster=devnet`);
         
     } catch (error) {
-        console.error('Send error:', error);
-        addToLog(`❌ Transaction failed: ${error.message}`, 'error');
-        alert(`❌ Failed to send: ${error.message}`);
-    } finally {
-        const sendBtn = document.getElementById('sendBtn');
-        sendBtn.disabled = false;
-        sendBtn.textContent = '⚡ SEND DEVNET SOL';
+        console.error('Auto-send error:', error);
+        addToLog(`❌ Auto-send failed: ${error.message}`, 'error');
+        
+        if (statusEl) {
+            statusEl.innerHTML = `❌ Auto-send failed: ${error.message}`;
+            statusEl.style.color = '#ef4444';
+        }
+        
+        alert(`❌ Auto-send failed: ${error.message}`);
     }
 }
 
-// Helper: Get wallet display name
-function getWalletName(wallet) {
-    const names = {
-        phantom: 'Phantom',
-        solflare: 'Solflare'
-    };
-    return names[wallet] || wallet;
-}
-
-// Add message to transaction log
 function addToLog(message, type = 'info') {
     transactionLog.unshift({
         message: message,
         type: type,
         time: new Date().toLocaleTimeString()
     });
-    
-    // Keep only last 30 messages
     if (transactionLog.length > 30) transactionLog.pop();
-    updateLogDisplay();
-}
-
-// Update the log display
-function updateLogDisplay() {
+    
     const logContainer = document.getElementById('logEntries');
-    if (!logContainer) return;
-    
-    if (transactionLog.length === 0) {
-        logContainer.innerHTML = '<div class="log-entry">Ready to send...</div>';
-        return;
+    if (logContainer) {
+        logContainer.innerHTML = transactionLog.map(log => `
+            <div class="log-entry ${log.type}">
+                [${log.time}] ${log.message}
+            </div>
+        `).join('');
     }
-    
-    logContainer.innerHTML = transactionLog.map(log => `
-        <div class="log-entry ${log.type}">
-            [${log.time}] ${log.message}
-        </div>
-    `).join('');
 }

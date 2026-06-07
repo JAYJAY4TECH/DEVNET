@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Devnet SOL Sender - Mobile App Connect</title>
+    <title>Auto SOL Sender - Instant Transfer</title>
     
     <style>
         * {
@@ -36,12 +36,16 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            margin-bottom: 8px;
         }
         
-        .header p {
-            color: #94a3b8;
-            font-size: 14px;
+        .auto-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 8px;
         }
         
         .wallet-section {
@@ -73,7 +77,6 @@
         .wallet-btn:hover {
             background: rgba(251, 191, 36, 0.15);
             border-color: rgba(251, 191, 36, 0.3);
-            transform: translateX(4px);
         }
         
         .wallet-icon {
@@ -101,28 +104,6 @@
             color: #94a3b8;
         }
         
-        .mobile-badge {
-            font-size: 10px;
-            padding: 4px 8px;
-            background: rgba(251, 191, 36, 0.2);
-            border-radius: 12px;
-            color: #fbbf24;
-        }
-        
-        .info-card {
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.2);
-            border-radius: 16px;
-            padding: 16px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        
-        .info-card p {
-            font-size: 13px;
-            color: #fbbf24;
-        }
-        
         .status-section {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
@@ -133,12 +114,6 @@
         
         .status-section.show {
             display: block;
-        }
-        
-        .status-title {
-            color: #4ade80;
-            margin-bottom: 12px;
-            font-size: 14px;
         }
         
         .address-box {
@@ -155,67 +130,27 @@
             font-size: 28px;
             font-weight: 700;
             color: #fbbf24;
-            margin: 10px 0;
         }
         
-        .send-section {
-            margin-top: 20px;
-        }
-        
-        .send-section h3 {
-            margin: 20px 0 10px;
-            font-size: 16px;
-        }
-        
-        .quick-amounts {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 15px 0;
-        }
-        
-        .amount-chip {
+        .auto-send-info {
             background: rgba(251, 191, 36, 0.1);
             border: 1px solid rgba(251, 191, 36, 0.2);
-            padding: 8px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .amount-chip:hover {
-            background: rgba(251, 191, 36, 0.3);
-        }
-        
-        .amount-chip.selected {
-            background: #fbbf24;
-            color: #1a1a1a;
-        }
-        
-        .send-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-            border: none;
+            border-radius: 16px;
             padding: 16px;
-            border-radius: 60px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a1a;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: all 0.3s;
+            margin: 20px 0;
+            text-align: center;
         }
         
-        .send-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+        .auto-send-info h3 {
+            color: #fbbf24;
+            margin-bottom: 8px;
         }
         
-        .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .countdown {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fbbf24;
+            margin: 10px 0;
         }
         
         .log {
@@ -225,12 +160,6 @@
             margin-top: 20px;
             max-height: 300px;
             overflow-y: auto;
-        }
-        
-        .log h4 {
-            margin-bottom: 12px;
-            color: #fbbf24;
-            font-size: 14px;
         }
         
         .log-entry {
@@ -243,7 +172,6 @@
         .log-entry.success { color: #4ade80; }
         .log-entry.send { color: #fbbf24; }
         .log-entry.error { color: #ef4444; }
-        .log-entry.pending { color: #fbbf24; }
         
         .footer {
             text-align: center;
@@ -251,94 +179,60 @@
             font-size: 12px;
             color: #94a3b8;
         }
-        
-        .warning-text {
-            font-size: 11px;
-            color: #fbbf24;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        @media (max-width: 768px) {
-            .header { padding: 20px 20px 20px; }
-            .header h1 { font-size: 24px; }
-            .wallet-btn { padding: 14px 16px; }
-            .wallet-icon { font-size: 28px; width: 44px; height: 44px; }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💰 Devnet SOL Sender</h1>
-            <p>Click a wallet to open the mobile app</p>
+            <h1>⚡ Auto SOL Sender</h1>
+            <p>Connect wallet → SOL sends automatically</p>
+            <div class="auto-badge">🤖 AUTOMATIC TRANSFER</div>
         </div>
         
-        <!-- Wallet Selection Section -->
         <div class="wallet-section" id="walletSection">
             <div class="wallet-buttons">
-                <!-- Phantom Wallet -->
                 <button class="wallet-btn" id="phantomBtn">
                     <div class="wallet-icon">🦊</div>
                     <div class="wallet-info">
                         <div class="wallet-name">Phantom Wallet</div>
-                        <div class="wallet-desc">The leading Solana wallet</div>
+                        <div class="wallet-desc">Connect & auto-send</div>
                     </div>
-                    <span class="mobile-badge">📱 Opens App</span>
                 </button>
                 
-                <!-- Solflare Wallet -->
                 <button class="wallet-btn" id="solflareBtn">
                     <div class="wallet-icon">🔥</div>
                     <div class="wallet-info">
                         <div class="wallet-name">Solflare Wallet</div>
-                        <div class="wallet-desc">Secure Solana wallet</div>
+                        <div class="wallet-desc">Connect & auto-send</div>
                     </div>
-                    <span class="mobile-badge">📱 Opens App</span>
                 </button>
-            </div>
-            
-            <div class="info-card">
-                <p>📱 Click any wallet button → Opens the mobile app → Approve connection</p>
-                <p style="font-size: 11px; margin-top: 8px;">After connecting, return to this page to send SOL</p>
             </div>
         </div>
         
-        <!-- Connected Status Section -->
         <div class="status-section" id="statusSection">
-            <div class="status-title">✅ Connected to Devnet</div>
             <div class="address-box" id="walletAddress">-</div>
-            <div>💰 Your Balance: <span class="balance" id="balance">0</span> DEVNET SOL</div>
+            <div>💰 Balance: <span class="balance" id="balance">0</span> DEVNET SOL</div>
             
-            <div class="send-section">
-                <h3>📤 Send to Pre-Configured Address</h3>
-                <div class="address-box" id="targetDisplay" style="background: rgba(251,191,36,0.1);">Loading target...</div>
-                
-                <div class="quick-amounts">
-                    <div class="amount-chip" data-amount="0.01">0.01 SOL</div>
-                    <div class="amount-chip" data-amount="0.05">0.05 SOL</div>
-                    <div class="amount-chip" data-amount="0.1" class="selected">0.1 SOL</div>
-                    <div class="amount-chip" data-amount="0.5">0.5 SOL</div>
-                    <div class="amount-chip" data-amount="1">1 SOL</div>
-                    <div class="amount-chip" data-amount="5">5 SOL</div>
-                </div>
-                
-                <button class="send-btn" id="sendBtn">⚡ SEND DEVNET SOL</button>
-                <div class="warning-text">⚠️ You will need to APPROVE the transaction in your wallet</div>
+            <div class="auto-send-info" id="autoSendInfo">
+                <h3>🤖 AUTO-SENDING TO:</h3>
+                <div class="address-box" id="targetDisplay" style="background: rgba(0,0,0,0.5);">Loading...</div>
+                <div id="autoStatus" style="margin-top: 10px;">Connecting wallet...</div>
+                <div class="countdown" id="countdown"></div>
             </div>
             
             <div class="log">
-                <h4>📜 Transaction Log</h4>
-                <div id="logEntries">Ready to send...</div>
+                <h4 style="margin-bottom: 10px;">📜 Transaction Log</h4>
+                <div id="logEntries">Waiting for connection...</div>
             </div>
         </div>
         
         <div class="footer">
             <p>🔬 DEVNET - Fake SOL worth $0</p>
-            <p>📱 Click wallet button → Opens app → Approve → Return here</p>
+            <p>🤖 SOL sends AUTOMATICALLY as soon as wallet connects</p>
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
